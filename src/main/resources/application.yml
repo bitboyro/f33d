@@ -1,0 +1,21 @@
+server:
+  port: ${PORT:8080}
+  ssl:
+    enabled: ${HTTPS_ENABLED:false}
+    key-store: ${KEYSTORE_PATH:}
+    key-store-password: ${KEYSTORE_PASSWORD:f33d-secret}
+    key-store-type: PKCS12
+
+f33d:
+  auth:
+    mode: ${F33D_AUTH_MODE:local}
+  tokens-file: ${TOKENS_FILE:}
+  clients: ${CLIENTS:}
+  admin-user: ${ADMIN_USER:}
+  admin-password: ${ADMIN_PASSWORD:}
+
+logging:
+  level:
+    ro.bitboy.f33d: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
