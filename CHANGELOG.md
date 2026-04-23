@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-04-23
+
 ### Fixed
 
 - `SseService.broadcast()` now catches `Exception` (was `IOException`) so `IllegalStateException` from already-completed emitters is also handled cleanly
 - Suppressed Tomcat container ERROR logs for broken-pipe events caused by SSE client disconnects (`org.apache.catalina.core.ContainerBase` set to WARN)
+- `clients/f33d-send.sh` and `clients/mcp-server/f33d-mcp.py` now send token via `X-Token` header instead of `Authorization: Bearer` — Traefik strips the `Authorization` header before it reaches the app
 
 ## [1.1.0] - 2026-04-23
 
