@@ -4,6 +4,7 @@ import html.Page;
 import html.components.ThemeToggle;
 import html.css.ShadcnTheme;
 import html.spring.HtmxController;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ro.bitboy.f33d.service.SseService;
 import ro.bitboy.f33d.service.TokenService;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +24,14 @@ public class FeedController extends HtmxController {
 
     private final SseService sseService;
     private final TokenService tokenService;
+    private final String feedCss;
+    private final String feedJs;
 
-    public FeedController(SseService sseService, TokenService tokenService) {
+    public FeedController(SseService sseService, TokenService tokenService) throws IOException {
         this.sseService = sseService;
         this.tokenService = tokenService;
+        this.feedCss = new ClassPathResource("feed.css").getContentAsString(StandardCharsets.UTF_8);
+        this.feedJs  = new ClassPathResource("feed.js").getContentAsString(StandardCharsets.UTF_8);
     }
 
     @GetMapping(value = "/", produces = "text/html")
@@ -47,7 +52,7 @@ public class FeedController extends HtmxController {
                     sidebar(sseService, tokenService),
                     feedMain(sseService)
                 ),
-                interactScript()
+                script(feedJs)
             );
 
         return page(
@@ -59,24 +64,7 @@ public class FeedController extends HtmxController {
                     ThemeToggle.darkStyles(darkTheme),
                     ThemeToggle.initScript()
                 )
-                .head(style("""
-                    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-                    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-                    html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 13px; background: hsl(var(--background)); color: hsl(var(--foreground)); }
-                    ::-webkit-scrollbar { width: 4px; }
-                    ::-webkit-scrollbar-track { background: transparent; }
-                    ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 2px; }
-                    @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-                    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-                    @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
-                    body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: 2px; background: rgba(0,230,118,0.03); animation: scanline 8s linear infinite; pointer-events: none; z-index: 9999; }
-                    #search-input:focus { border-color: hsl(var(--primary)) !important; outline: none; }
-                    .src-item { cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; margin-bottom: 2px; border-left: 2px solid transparent; transition: all 0.1s; }
-                    .src-item:hover { background: rgba(0,230,118,0.05); }
-                    .src-item.active { background: rgba(0,230,118,0.08); border-left-color: hsl(var(--primary)); }
-                    .src-item.active .src-label { color: hsl(var(--primary)); font-weight: 600; }
-                """))
+                .head(style(feedCss))
                 .title("f33d")
                 .body(content)
         );
@@ -175,7 +163,10 @@ public class FeedController extends HtmxController {
                 div().attr("style", "margin-bottom:8px").add(
                     div(name).attr("style", "font-size:9px;color:" + color + ";letter-spacing:0.05em;margin-bottom:2px"),
                     div(token.substring(0, Math.min(12, token.length())) + "…")
-                        .attr("style", "font-size:9px;color:hsl(var(--muted-foreground));letter-spacing:0.03em;word-break:break-all")
+                        .attr("style", "font-size:9px;color:hsl(var(--muted-foreground));letter-spacing:0.03em;cursor:pointer")
+                        .attr("title", "Click to copy token")
+                        .attr("data-token", token)
+                        .attr("onclick", "var el=this,t=el.getAttribute('data-token'),p=el.textContent;navigator.clipboard.writeText(t).then(function(){el.textContent='copied!';setTimeout(function(){el.textContent=p},1200)})")
                 )
             );
         }
@@ -207,7 +198,7 @@ public class FeedController extends HtmxController {
 
         var feed = div().id("feed")
             .attr("sse-swap", "message")
-            .hxSwap("beforeend");
+            .hxSwap("afterbegin");
 
         if (messages.isEmpty()) {
             feed.add(div().id("empty-state")
@@ -219,18 +210,13 @@ public class FeedController extends HtmxController {
                         .attr("style", "font-size:11px;background:hsl(var(--card));border:1px solid hsl(var(--border));padding:6px 12px;display:inline-block;margin-top:8px")
                 ));
         } else {
-            var ordered = new ArrayList<>(messages);
-            Collections.reverse(ordered);
-            ordered.forEach(msg -> feed.add(raw(sseService.renderCard(msg))));
+            messages.forEach(msg -> feed.add(raw(sseService.renderCard(msg))));
         }
-
-        var cursor = div("█").id("feed-cursor")
-            .attr("style", "padding:10px 20px;color:hsl(var(--primary));font-size:13px;animation:blink 1.2s step-end infinite");
 
         var scrollable = div()
             .id("feed-container")
             .attr("style", "flex:1;overflow-y:auto;display:flex;flex-direction:column")
-            .add(feed, cursor);
+            .add(feed);
 
         return div()
             .attr("hx-ext", "sse")
@@ -296,89 +282,4 @@ public class FeedController extends HtmxController {
         );
     }
 
-    private static html.elements.EmptyBodyElement<?> interactScript() {
-        return script("""
-            (function() {
-              var liveDot   = document.getElementById('live-dot');
-              var liveLabel = document.getElementById('live-label');
-              var pauseBtn  = document.getElementById('pause-btn');
-              var msgCount  = document.getElementById('msg-count');
-              var searchInput = document.getElementById('search-input');
-              var feed      = document.getElementById('feed');
-              var container = document.getElementById('feed-container');
-
-              var paused = false;
-              var activeFilter = '';
-
-              function updateCount() {
-                var rows = feed.querySelectorAll('[data-feed-row]');
-                var visible = Array.from(rows).filter(function(r) { return r.style.display !== 'none'; }).length;
-                msgCount.textContent = visible + ' msg' + (visible !== 1 ? 's' : '');
-              }
-
-              function applyFilters() {
-                var q = searchInput.value.toLowerCase();
-                var rows = feed.querySelectorAll('[data-feed-row]');
-                rows.forEach(function(row) {
-                  var matchSrc = !activeFilter || row.dataset.source === activeFilter;
-                  var matchSearch = !q || row.textContent.toLowerCase().includes(q);
-                  row.style.display = (matchSrc && matchSearch) ? '' : 'none';
-                });
-                updateCount();
-              }
-
-              function scrollToBottom() {
-                if (container) container.scrollTop = container.scrollHeight;
-              }
-
-              // SSE connection status
-              document.body.addEventListener('htmx:sseOpen', function() {
-                liveDot.style.background = 'hsl(var(--primary))';
-                liveDot.style.animation = 'pulse 2s ease-in-out infinite';
-                liveLabel.textContent = 'LIVE';
-                liveLabel.style.color = 'hsl(var(--primary))';
-              });
-              document.body.addEventListener('htmx:sseError', function() {
-                liveDot.style.background = 'hsl(var(--destructive))';
-                liveDot.style.animation = 'none';
-                liveLabel.textContent = 'ERROR';
-                liveLabel.style.color = 'hsl(var(--destructive))';
-              });
-              document.body.addEventListener('htmx:sseMessage', function() {
-                document.getElementById('empty-state') && document.getElementById('empty-state').remove();
-                applyFilters();
-                if (!paused) scrollToBottom();
-              });
-
-              // Pause / resume
-              pauseBtn.addEventListener('click', function() {
-                paused = !paused;
-                pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
-                pauseBtn.style.color = paused ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))';
-                liveDot.style.animation = paused ? 'none' : 'pulse 2s ease-in-out infinite';
-                liveLabel.textContent = paused ? 'PAUSED' : 'LIVE';
-                var cursor = document.getElementById('feed-cursor');
-                if (cursor) cursor.style.display = paused ? 'none' : '';
-              });
-
-              // Search
-              searchInput.addEventListener('input', applyFilters);
-
-              // Source filter (sidebar)
-              document.querySelectorAll('.src-item').forEach(function(item) {
-                item.addEventListener('click', function() {
-                  var src = item.dataset.sourceFilter;
-                  activeFilter = (activeFilter === src && src !== '') ? '' : src;
-                  document.querySelectorAll('.src-item').forEach(function(i) {
-                    i.classList.toggle('active', i.dataset.sourceFilter === activeFilter);
-                  });
-                  applyFilters();
-                });
-              });
-
-              scrollToBottom();
-              updateCount();
-            })();
-        """);
-    }
 }

@@ -71,7 +71,7 @@ def post_message(message: str, level: str = "info") -> dict:
         f"{F33D_URL}/api/message",
         data=payload,
         headers={
-            "Authorization": f"Bearer {F33D_TOKEN}",
+            "X-Token": F33D_TOKEN,
             "Content-Type": "application/json"
         },
         method="POST"

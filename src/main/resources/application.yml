@@ -19,3 +19,4 @@ logging:
     ro.bitboy.f33d: INFO
     org.springframework.security: WARN
     org.springframework.web: WARN
+    org.apache.catalina.core.ContainerBase: WARN

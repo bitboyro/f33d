@@ -28,7 +28,7 @@ The token is how f33d knows who sent each message — the sender name appears ne
 ## Quickstart
 
 ```bash
-docker run -p 8080:8080 ghcr.io/bitboy/f33d
+docker run -p 8080:8080 ghcr.io/bitboyro/f33d
 ```
 
 Open [http://localhost:8080](http://localhost:8080), log in with the printed credentials, and send a test message:
@@ -49,7 +49,7 @@ Pass `CLIENTS` to pre-create named tokens. Each name gets its own token and thos
 ```bash
 docker run -p 8080:8080 \
   -e CLIENTS=deploy_bot,morning_report,claude_agent \
-  ghcr.io/bitboy/f33d
+  ghcr.io/bitboyro/f33d
 ```
 
 ---
@@ -62,7 +62,7 @@ By default tokens are regenerated every time the container starts. To persist th
 docker run -p 8080:8080 \
   -v f33d-data:/data \
   -e TOKENS_FILE=/data/tokens.properties \
-  ghcr.io/bitboy/f33d
+  ghcr.io/bitboyro/f33d
 ```
 
 The file uses a simple `token=name` format:
@@ -75,7 +75,7 @@ b4e8d3c2f1a0e9d8c7b6a5f4e3d2c1b0a9f8e7=agent_a
 To add a new token without restarting:
 
 ```bash
-docker run --rm ghcr.io/bitboy/f33d create-token my_new_bot >> /path/to/tokens.properties
+docker run --rm ghcr.io/bitboyro/f33d create-token my_new_bot >> /path/to/tokens.properties
 ```
 
 Then restart the container so it picks up the new entry.
@@ -88,7 +88,7 @@ Then restart the container so it picks up the new entry.
 docker run -p 8080:8080 \
   -e ADMIN_USER=roman \
   -e ADMIN_PASSWORD=mypassword \
-  ghcr.io/bitboy/f33d
+  ghcr.io/bitboyro/f33d
 ```
 
 ---
@@ -193,7 +193,7 @@ Copy the command file into your project's `.claude/commands/` directory:
 mkdir -p .claude/commands
 cp /path/to/f33d/clients/f33d-send.sh .  # optional helper
 curl -o .claude/commands/f33d-notify.md \
-  https://raw.githubusercontent.com/bitboy/f33d/main/.claude/commands/f33d-notify.md
+  https://raw.githubusercontent.com/bitboyro/f33d/main/.claude/commands/f33d-notify.md
 ```
 
 Or create `.claude/commands/f33d-notify.md` manually:
@@ -287,7 +287,7 @@ Add this to your project's `CLAUDE.md` (or equivalent agent instructions) so the
 
 ```markdown
 ## Notifications
-When you finish a long-running task, send a notification: `/f33d-notify <summary>`
+When you finish a task, send a notification: `/f33d-notify <summary>`
 ```
 
 **MCP variant** — for any agent with the f33d MCP server connected:
@@ -295,7 +295,7 @@ When you finish a long-running task, send a notification: `/f33d-notify <summary
 ```markdown
 ## Notifications
 You have access to a `send_message` tool (f33d MCP server).
-Call it when: a build finishes, a long analysis completes, or anything the user would want to know about while away from the terminal.
+Call it when: a build finishes, an analysis completes, or anything the user would want to know about while away from the terminal.
 Keep messages short — one sentence with the outcome.
 Set `level` based on the outcome: success=passed/complete, warn=partial issue, error=failure, info=neutral update.
 Never include secrets, credentials, API keys, passwords, IP addresses, or any personally identifiable information in messages unless explicitly instructed to do so.
@@ -313,7 +313,7 @@ docker run -p 8443:8443 \
   -e HTTPS_ENABLED=true \
   -e KEYSTORE_PATH=/data/f33d.p12 \
   -v f33d-data:/data \
-  ghcr.io/bitboy/f33d
+  ghcr.io/bitboyro/f33d
 ```
 
 The certificate is auto-generated on first start and reused on subsequent starts.
@@ -330,7 +330,7 @@ docker run -p 8080:8080 \
   -e KEYCLOAK_ISSUER_URI=https://auth.example.com/realms/my-realm \
   -e KEYCLOAK_CLIENT_ID=f33d \
   -e KEYCLOAK_CLIENT_SECRET=xxx \
-  ghcr.io/bitboy/f33d
+  ghcr.io/bitboyro/f33d
 ```
 
 Register `f33d` in Keycloak as an OIDC client with `standardFlow` enabled and redirect URI `https://your-f33d-host/login/oauth2/code/keycloak`.

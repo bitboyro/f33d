@@ -38,7 +38,7 @@ JSON=$(printf '{"message":%s,"level":"%s"}' \
 
 HTTP_CODE=$(curl -sS -o /tmp/f33d_response -w "%{http_code}" \
   -X POST "$URL/api/message" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d "$JSON")
 BODY=$(cat /tmp/f33d_response)
