@@ -21,6 +21,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ro.bitboy.f33d.service.AuditService;
 import ro.bitboy.f33d.service.TokenService;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class LocalSecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain apiFilterChain(HttpSecurity http, TokenService tokenService) throws Exception {
+    public SecurityFilterChain apiFilterChain(HttpSecurity http, TokenService tokenService, AuditService auditService) throws Exception {
         http
             .securityMatcher("/api/**")
             .csrf(csrf -> csrf.disable())
@@ -50,7 +51,7 @@ public class LocalSecurityConfig {
                 .requestMatchers("/api/message").authenticated()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(new TokenAuthFilter(tokenService), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new TokenAuthFilter(tokenService, auditService), UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(e -> e.authenticationEntryPoint(
                 (req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
             ));
@@ -110,9 +111,11 @@ public class LocalSecurityConfig {
     static class TokenAuthFilter extends OncePerRequestFilter {
 
         private final TokenService tokenService;
+        private final AuditService auditService;
 
-        TokenAuthFilter(TokenService tokenService) {
+        TokenAuthFilter(TokenService tokenService, AuditService auditService) {
             this.tokenService = tokenService;
+            this.auditService = auditService;
         }
 
         @Override
@@ -121,14 +124,25 @@ public class LocalSecurityConfig {
 
             String token = extractToken(req);
             if (token != null) {
-                tokenService.resolveName(token).ifPresent(name -> {
+                var resolved = tokenService.resolveName(token);
+                if (resolved.isPresent()) {
                     var auth = new UsernamePasswordAuthenticationToken(
-                        name, null, List.of(new SimpleGrantedAuthority("ROLE_CLIENT"))
+                        resolved.get(), null, List.of(new SimpleGrantedAuthority("ROLE_CLIENT"))
                     );
                     SecurityContextHolder.getContext().setAuthentication(auth);
-                });
+                } else {
+                    auditService.recordFailedAttempt(clientIp(req), req.getRequestURI(), req.getHeader("User-Agent"));
+                }
             }
             chain.doFilter(req, res);
+        }
+
+        private static String clientIp(HttpServletRequest req) {
+            String forwarded = req.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
+            return req.getRemoteAddr();
         }
 
         private String extractToken(HttpServletRequest req) {

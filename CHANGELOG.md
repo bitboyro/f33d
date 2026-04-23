@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-23
+
+### Added
+
+- Message levels: `POST /api/message` now accepts an optional `level` field (`info` | `success` | `warn` | `error`, default `info`) — each level renders a distinct glyph (`·` `✓` `⚠` `✕`) and color in the feed
+- `F33D_LEVEL` env var in `clients/f33d-send.sh` to set level per send
+- `level` parameter in `clients/mcp-server/f33d-mcp.py` and `f33d-mcp.sh` MCP tools — agents pick the appropriate level based on outcome
+- Level prefix syntax in `.claude/commands/f33d-notify.md`: `/f33d-notify success Build passed`
+
+### Changed
+
+- Rebuilt the feed UI to match the terminal-style design: compact grid rows (SOURCE | TIME | MESSAGE), left sidebar with per-source filtering and levels legend, 48px header with search, pause/resume, and live status dot
+- Source names in the feed are now colored by a deterministic palette; message text is colored by level
+- Feed now appends new messages at the bottom (newest-last) with auto-scroll
+- Removed the "FEED" subtitle from the header — logo is `f33d` only
+
 ## [1.0.0] - 2026-04-23
 
 ### Added

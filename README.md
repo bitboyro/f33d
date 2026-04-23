@@ -93,6 +93,21 @@ docker run -p 8080:8080 \
 
 ---
 
+## Message levels
+
+Every message has a level that controls the visual indicator shown in the feed:
+
+| Level | Glyph | Color | When to use |
+|---|---|---|---|
+| `info` | `·` | white | neutral updates, heartbeats, progress notes |
+| `success` | `✓` | green | completed tasks, passed builds, successful deploys |
+| `warn` | `⚠` | yellow | partial failures, coverage drops, rate limits |
+| `error` | `✕` | red | hard failures, crashes, timeouts |
+
+`info` is the default when `level` is omitted.
+
+---
+
 ## Sending messages
 
 ### curl
@@ -101,8 +116,10 @@ docker run -p 8080:8080 \
 curl -X POST https://your-f33d-host/api/message \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Build finished in 42s"}'
+  -d '{"message": "Build finished in 42s", "level": "success"}'
 ```
+
+The `level` field is optional and defaults to `info`.
 
 ### Shell script
 
@@ -111,19 +128,33 @@ F33D_TOKEN=<token> F33D_URL=https://your-f33d-host \
   ./clients/f33d-send.sh "Deployment complete"
 ```
 
-Or with positional args:
+Set `F33D_LEVEL` to override the default level:
 
 ```bash
-./clients/f33d-send.sh <token> "Deployment complete" https://your-f33d-host
+F33D_TOKEN=<token> F33D_LEVEL=success ./clients/f33d-send.sh "Deploy passed"
+F33D_TOKEN=<token> F33D_LEVEL=error   ./clients/f33d-send.sh "Deploy failed"
+```
+
+Or with positional args (`<token> <message> [level] [url]`):
+
+```bash
+./clients/f33d-send.sh <token> "Deployment complete"
+./clients/f33d-send.sh <token> "Deploy passed" success
+./clients/f33d-send.sh <token> "Deploy failed" error https://your-f33d-host
 ```
 
 ### Claude Code slash command
 
-If you have f33d running and `F33D_TOKEN` / `F33D_URL` set in your environment, you can notify yourself from inside any Claude Code session:
+If you have f33d running and `F33D_TOKEN` / `F33D_URL` set in your environment, you can notify yourself from inside any Claude Code session. Prefix the message with a level keyword:
 
 ```
-/f33d-notify Analysis complete — 3 issues found in auth module
+/f33d-notify success Build passed — 2m 14s
+/f33d-notify warn Coverage dropped below threshold
+/f33d-notify error Deploy failed — pod OOMKilled
+/f33d-notify Analysis complete — 3 issues found
 ```
+
+The level prefix is optional; messages without one default to `info`.
 
 ### MCP server (for AI agents)
 
@@ -144,7 +175,7 @@ The `clients/mcp-server/f33d-mcp.py` file is a Python MCP server (no pip require
 }
 ```
 
-The agent gains a `send_message` tool and can notify you when tasks complete.
+The agent gains a `send_message` tool with a `level` parameter it can set based on outcome. The tool description instructs the model to choose `success` for completions, `warn` for partial issues, and `error` for failures.
 
 ---
 
@@ -266,6 +297,7 @@ When you finish a long-running task, send a notification: `/f33d-notify <summary
 You have access to a `send_message` tool (f33d MCP server).
 Call it when: a build finishes, a long analysis completes, or anything the user would want to know about while away from the terminal.
 Keep messages short — one sentence with the outcome.
+Set `level` based on the outcome: success=passed/complete, warn=partial issue, error=failure, info=neutral update.
 Never include secrets, credentials, API keys, passwords, IP addresses, or any personally identifiable information in messages unless explicitly instructed to do so.
 ```
 

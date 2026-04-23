@@ -37,13 +37,13 @@ print('' if v is None else json.dumps(v))
 
 respond() { printf '%s\n' "$1"; }
 
-TOOLS_JSON='[{"name":"send_message","description":"Send a notification message to the f33d feed. Use this to notify the user when a task completes, a build finishes, an analysis is done, or anything noteworthy happens.","inputSchema":{"type":"object","properties":{"message":{"type":"string","description":"The message text to send"}},"required":["message"]}}]'
+TOOLS_JSON='[{"name":"send_message","description":"Send a notification message to the f33d feed. Use this to notify the user when a task completes, a build finishes, an analysis is done, or anything noteworthy happens. Choose the level that best reflects the outcome: success for completed/passed, warn for partial issues, error for failures, info for neutral updates.","inputSchema":{"type":"object","properties":{"message":{"type":"string","description":"The message text to send"},"level":{"type":"string","enum":["info","success","warn","error"],"description":"Log level controlling the visual indicator in the feed. Defaults to info."}},"required":["message"]}}]'
 
 # --- request handler -------------------------------------------------------
 
 handle() {
   local line="$1"
-  local method id message
+  local method id message level
 
   method=$(json_get "$line" ".get('method','')")
   id=$(json_id "$line")
@@ -51,7 +51,7 @@ handle() {
   case "$method" in
 
     initialize)
-      respond "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"f33d\",\"version\":\"1.0.0\"}}}"
+      respond "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"f33d\",\"version\":\"1.1.0\"}}}"
       ;;
 
     tools/list)
@@ -60,7 +60,8 @@ handle() {
 
     tools/call)
       message=$(json_get "$line" "['params']['arguments']['message']")
-      if "$F33D_SEND" "$F33D_TOKEN" "$message" "$F33D_URL" >/dev/null 2>&1; then
+      level=$(json_get "$line" "['params']['arguments'].get('level','info')")
+      if F33D_LEVEL="$level" "$F33D_SEND" "$F33D_TOKEN" "$message" "$F33D_URL" >/dev/null 2>&1; then
         respond "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Message sent.\"}],\"isError\":false}}"
       else
         respond "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Failed to send message.\"}],\"isError\":true}}"

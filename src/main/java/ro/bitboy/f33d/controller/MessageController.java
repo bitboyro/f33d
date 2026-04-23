@@ -12,6 +12,7 @@ import ro.bitboy.f33d.service.SseService;
 import ro.bitboy.f33d.service.TokenService;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,7 +46,10 @@ public class MessageController {
             return ResponseEntity.badRequest().body(Map.of("error", "message is required"));
         }
 
-        Message msg = new Message(UUID.randomUUID().toString(), sender, text.trim(), Instant.now());
+        String rawLevel = body.getOrDefault("level", "info");
+        String level = List.of("info", "success", "warn", "error").contains(rawLevel) ? rawLevel : "info";
+
+        Message msg = new Message(UUID.randomUUID().toString(), sender, text.trim(), level, Instant.now());
         sseService.broadcast(msg);
         return ResponseEntity.ok(Map.of("status", "delivered", "id", msg.id()));
     }

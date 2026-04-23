@@ -74,4 +74,10 @@ public class TokenService {
     public Optional<String> resolveName(String token) {
         return Optional.ofNullable(tokenToName.get(token));
     }
+
+    public Map<String, String> getNameToToken() {
+        Map<String, String> result = new LinkedHashMap<>();
+        tokenToName.forEach((token, name) -> result.put(name, token));
+        return result;
+    }
 }

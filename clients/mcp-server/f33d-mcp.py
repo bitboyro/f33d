@@ -32,13 +32,17 @@ import urllib.error
 F33D_URL = os.environ.get("F33D_URL", "http://localhost:8080").rstrip("/")
 F33D_TOKEN = os.environ.get("F33D_TOKEN", "")
 
+VALID_LEVELS = ("info", "success", "warn", "error")
+
 TOOLS = [
     {
         "name": "send_message",
         "description": (
             "Send a notification message to the f33d feed. "
             "Use this to notify the user when a task completes, "
-            "a build finishes, an analysis is done, or anything noteworthy happens."
+            "a build finishes, an analysis is done, or anything noteworthy happens. "
+            "Choose the level that best reflects the outcome: "
+            "success for completed/passed, warn for partial issues, error for failures, info for neutral updates."
         ),
         "inputSchema": {
             "type": "object",
@@ -46,6 +50,11 @@ TOOLS = [
                 "message": {
                     "type": "string",
                     "description": "The message text to send"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": list(VALID_LEVELS),
+                    "description": "Log level controlling the visual indicator in the feed. Defaults to 'info'."
                 }
             },
             "required": ["message"]
@@ -54,8 +63,10 @@ TOOLS = [
 ]
 
 
-def post_message(message: str) -> dict:
-    payload = json.dumps({"message": message}).encode()
+def post_message(message: str, level: str = "info") -> dict:
+    if level not in VALID_LEVELS:
+        level = "info"
+    payload = json.dumps({"message": message, "level": level}).encode()
     req = urllib.request.Request(
         f"{F33D_URL}/api/message",
         data=payload,
@@ -84,7 +95,7 @@ def handle(req: dict):
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "f33d", "version": "1.0.0"}
+                "serverInfo": {"name": "f33d", "version": "1.1.0"}
             }
         }
 
@@ -96,7 +107,7 @@ def handle(req: dict):
         name = params.get("name")
         args = params.get("arguments", {})
         if name == "send_message":
-            result = post_message(args.get("message", ""))
+            result = post_message(args.get("message", ""), args.get("level", "info"))
             text = "Message sent." if result["ok"] else f"Failed: {result.get('error')}"
             return {
                 "jsonrpc": "2.0", "id": req_id,
