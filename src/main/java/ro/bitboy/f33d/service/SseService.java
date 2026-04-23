@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ro.bitboy.f33d.model.Message;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class SseService {
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("message").data(html));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 dead.add(emitter);
             }
         }
