@@ -52,6 +52,7 @@ public class FeedController extends HtmxController {
                     sidebar(sseService, tokenService),
                     feedMain(sseService)
                 ),
+                div().id("sidebar-overlay"),
                 script(feedJs)
             );
 
@@ -60,6 +61,7 @@ public class FeedController extends HtmxController {
                 .sseExt(true)
                 .shadcn(darkTheme)
                 .headFirst(
+                    meta().attr("name", "viewport").attr("content", "width=device-width, initial-scale=1"),
                     ThemeToggle.tailwindConfig(),
                     ThemeToggle.darkStyles(darkTheme),
                     ThemeToggle.initScript()
@@ -74,6 +76,10 @@ public class FeedController extends HtmxController {
         return el("header")
             .attr("style", "height:48px;border-bottom:1px solid hsl(var(--border));padding:0 20px;display:flex;align-items:center;gap:20px;flex-shrink:0;background:hsl(var(--background))")
             .add(
+                // Hamburger (mobile only)
+                el("button").id("sidebar-toggle")
+                    .attr("style", "background:none;border:none;color:hsl(var(--muted-foreground));cursor:pointer;padding:4px 8px;align-items:center;font-size:18px;flex-shrink:0;line-height:1")
+                    .add(text("☰")),
                 // Logo
                 el("h1")
                     .attr("style", "font-weight:700;font-size:20px;letter-spacing:-0.02em;user-select:none;line-height:1;flex-shrink:0")
@@ -172,7 +178,9 @@ public class FeedController extends HtmxController {
         }
 
         return div()
-            .attr("style", "width:200px;border-right:1px solid hsl(var(--border));display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto")
+            .id("sidebar")
+            .attr("class", "app-sidebar")
+            .attr("style", "border-right:1px solid hsl(var(--border));display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto")
             .add(sourcesSection, levelsSection, div().attr("style", "flex:1"), tokensSection);
     }
 
@@ -189,7 +197,8 @@ public class FeedController extends HtmxController {
         var messages = sseService.getHistory();
 
         var columnHeaders = div()
-            .attr("style", "display:grid;grid-template-columns:120px 76px 1fr;gap:0 16px;padding:8px 20px;border-bottom:1px solid hsl(var(--border));flex-shrink:0;background:hsl(var(--background))")
+            .attr("class", "col-headers")
+            .attr("style", "display:grid;gap:0 16px;padding:8px 20px;border-bottom:1px solid hsl(var(--border));flex-shrink:0;background:hsl(var(--background))")
             .add(
                 span("SOURCE").attr("style", "font-size:9px;letter-spacing:0.2em;color:hsl(var(--muted-foreground));text-transform:uppercase"),
                 span("TIME").attr("style", "font-size:9px;letter-spacing:0.2em;color:hsl(var(--muted-foreground));text-transform:uppercase"),
@@ -272,6 +281,7 @@ public class FeedController extends HtmxController {
             Page.defaults()
                 .shadcn(darkTheme)
                 .headFirst(
+                    meta().attr("name", "viewport").attr("content", "width=device-width, initial-scale=1"),
                     ThemeToggle.tailwindConfig(),
                     ThemeToggle.darkStyles(darkTheme),
                     ThemeToggle.initScript()

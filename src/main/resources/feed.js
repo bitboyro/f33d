@@ -5,6 +5,18 @@
   var msgCount  = document.getElementById('msg-count');
   var searchInput = document.getElementById('search-input');
   var feed      = document.getElementById('feed');
+  var sidebarToggle = document.getElementById('sidebar-toggle');
+  var sidebar       = document.getElementById('sidebar');
+  var overlay       = document.getElementById('sidebar-overlay');
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+  sidebarToggle.addEventListener('click', function() {
+    sidebar.classList.contains('open') ? closeSidebar() : (sidebar.classList.add('open'), overlay.classList.add('open'));
+  });
+  overlay.addEventListener('click', closeSidebar);
 
   var paused = false;
   var activeFilter = '';

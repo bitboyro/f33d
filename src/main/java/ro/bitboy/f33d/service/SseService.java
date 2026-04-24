@@ -98,9 +98,10 @@ public class SseService {
         String srcColor = senderColor(msg.sender());
 
         return div()
+            .attr("class", "feed-row")
             .attr("data-feed-row", "1")
             .attr("data-source", msg.sender().toLowerCase())
-            .attr("style", "display:grid;grid-template-columns:120px 76px 1fr;gap:0 16px;padding:10px 20px;border-bottom:1px solid hsl(var(--border));animation:slideIn 0.2s ease")
+            .attr("style", "display:grid;gap:0 16px;padding:10px 20px;border-bottom:1px solid hsl(var(--border));animation:slideIn 0.2s ease")
             .add(
                 span().add(text(msg.sender().toUpperCase()))
                     .attr("style", "color:" + srcColor + ";font-weight:500;font-size:12px;letter-spacing:0.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"),

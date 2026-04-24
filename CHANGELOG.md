@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-24
+
+### Added
+
+- Responsive layout: sidebar collapses to a slide-in drawer on mobile (hamburger toggle + backdrop), narrows to 160px on tablet, full 200px on desktop
+- Feed grid tightens to `72px 52px 1fr` on mobile; viewport meta tag added (was missing entirely)
+
+### Fixed
+
+- Suppressed noisy `ERROR` logs from Tomcat for broken-pipe SSE disconnects via a targeted Logback filter (`BrokenPipeFilter`) — the application already handled dead emitters correctly, the logs were pure noise
+
 ## [1.1.1] - 2026-04-23
 
 ### Fixed
