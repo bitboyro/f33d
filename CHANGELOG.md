@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-04-24
+
+### Fixed
+
+- MCP server (`f33d-mcp.py`) now sends `User-Agent: f33d-mcp/1.2.2` — Cloudflare's bot protection was returning 403 for Python's default `Python-urllib` user agent
+
 ## [1.2.1] - 2026-04-24
 
 ### Fixed

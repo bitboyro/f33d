@@ -72,7 +72,8 @@ def post_message(message: str, level: str = "info") -> dict:
         data=payload,
         headers={
             "X-Token": F33D_TOKEN,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "f33d-mcp/1.2.2"
         },
         method="POST"
     )
