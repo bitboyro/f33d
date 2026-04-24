@@ -13,7 +13,7 @@
 
     <groupId>ro.bitboy</groupId>
     <artifactId>f33d</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
     <name>f33d</name>
     <description>Minimalist notification feed server</description>

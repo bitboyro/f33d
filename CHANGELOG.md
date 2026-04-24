@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-24
+
+### Fixed
+
+- `VERSION` and `pom.xml` were still reporting `1.0.0` — bumped to match the actual release
+
 ## [1.2.0] - 2026-04-24
 
 ### Added
